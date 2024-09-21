@@ -7,9 +7,10 @@ library(readxl)
 library(ggplot2)
 
 # Load in data
-trees_mosquitoes<- read_excel("C:/Users/erika/OneDrive - The Ohio State University/PhD/Courses/Ent Techniques fall 2024/Group Project/Data/mosquito_trap_locations_with_trees.xlsx")
+trees_mosquitoes<- read.csv("C:/Users/erika/OneDrive - The Ohio State University/PhD/Courses/Ent Techniques fall 2024/Group Project/tree-cover-mosquitos/data/mosquito_trap_locations_with_trees.csv")
+summary(trees_mosquitoes)
 
-mosquitoes<- read.csv("C:/Users/erika/OneDrive - The Ohio State University/PhD/Courses/Ent Techniques fall 2024/Group Project/Data/2021_mosquito_trap_data.csv")
+mosquitoes<- read.csv("C:/Users/erika/OneDrive - The Ohio State University/PhD/Courses/Ent Techniques fall 2024/Group Project/tree-cover-mosquitos/data/2021_mosquito_trap_data.csv")
 summary(mosquitoes)
 
 # Variable corrections
@@ -17,7 +18,7 @@ mosquitoes$x <- mosquitoes$longitude
 mosquitoes$y<- mosquitoes$latitude
 
 mosquitoes$zone_name<- mosquitoes$zone.name
-trees_mosquitoes$zone_name<- trees_mosquitoes$`Zone Name`
+trees_mosquitoes$zone_name<- trees_mosquitoes$Zone.Name
 
 # Cleaning data so we can get count of trees at buffered traps and count of 
   # mosquitoes at buffered traps
