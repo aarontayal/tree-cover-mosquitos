@@ -6,7 +6,6 @@ library(tidyverse)
 library(readxl)
 library(ggplot2)
 
-
 # Load in data
 trees_mosquitoes<- read_excel("C:/Users/erika/OneDrive - The Ohio State University/PhD/Courses/Ent Techniques fall 2024/Group Project/Data/mosquito_trap_locations_with_trees.xlsx")
 
