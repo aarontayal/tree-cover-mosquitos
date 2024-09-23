@@ -52,3 +52,10 @@ ggplot(trees_bugs_unique, aes(x = tree_count, y = sum_bugs)) +
 ggplot(trees_bugs_unique, aes(x = tree_count, y = sum_bugs, col = tree_count)) +
   geom_point() +
   theme_classic()
+
+# Subet for each trap type
+trees_bugs_gravid<- subset(trees_bugs_unique, trap.type == "Gravid")
+
+ggplot(trees_bugs_gravid, aes(x = zone_name, y = sum_bugs, col = tree_count)) +
+  geom_point() +
+  theme_classic()
