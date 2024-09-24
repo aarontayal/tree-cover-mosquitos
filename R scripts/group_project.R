@@ -6,6 +6,27 @@ library(tidyverse)
 library(readxl)
 library(ggplot2)
 
+# Theme
+theme_ew <- function (base_size=16, font=NA) { 
+  theme(axis.title.x = element_text(face="bold", size=20, vjust=0.4),
+        axis.text.x  = element_text(size=19, colour = "black"),
+        plot.title=element_text(face="bold", size = 18,hjust=0.01),
+        axis.title.y = element_text(face="bold",angle=90,size=20, vjust=2.0),
+        axis.text.y  = element_text(size=19,colour = "black"),
+        plot.background = element_rect(fill = NA ,colour = NA),
+        axis.line=element_line(colour="black"),
+        plot.margin = unit(c(1, 1, 0.5, 0.5), "lines"),
+        panel.background =   element_blank(),
+        panel.border = element_blank(),
+        panel.grid=element_blank(),
+        legend.position = "right",
+        legend.justification=c(1,1),
+        legend.background =element_blank(),
+        legend.key = element_blank(),
+        legend.text =   element_text(size = rel(1.5)),
+        legend.title =  element_text(size = rel(1.5), face = "bold", hjust = 0)) 
+}
+
 # Load in data
 trees_mosquitoes<- read.csv("C:/Users/erika/OneDrive - The Ohio State University/PhD/Courses/Ent Techniques fall 2024/Group Project/tree-cover-mosquitos/data/mosquito_trap_locations_with_trees.csv")
 summary(trees_mosquitoes)
@@ -43,19 +64,35 @@ trees_bugs_unique$tree_count<- trees_bugs_unique$OBJECTID_count
 # Visualize
 ggplot(mosquitoes, aes(x = zone_name, y = total.count)) +
   geom_bar(stat = "identity") +
-  theme_classic()
+  theme_ew()
 
 ggplot(trees_bugs_unique, aes(x = tree_count, y = sum_bugs)) +
   geom_point() +
-  theme_classic()
+  theme_ew()
 
 ggplot(trees_bugs_unique, aes(x = tree_count, y = sum_bugs, col = tree_count)) +
-  geom_point() +
-  theme_classic()
+  geom_point(size = 4) +
+  scale_x_continuous("Total number of trees") +
+  scale_y_continuous("Total number of mosquitoes") +
+  labs(col = "Total number of trees") +
+  theme_ew()
+ 
 
-# Subet for each trap type
+# Subset for each trap type
 trees_bugs_gravid<- subset(trees_bugs_unique, trap.type == "Gravid")
 
 ggplot(trees_bugs_gravid, aes(x = zone_name, y = sum_bugs, col = tree_count)) +
+  geom_point() +
+  theme_classic()
+
+trees_bugs_bg<- subset(trees_bugs_unique, trap.type == "BG")
+
+ggplot(trees_bugs_bg, aes(x = zone_name, y = sum_bugs, col = tree_count)) +
+  geom_point() +
+  theme_classic()
+
+trees_bugs_cdc<- subset(trees_bugs_unique, trap.type == "CDC")
+
+ggplot(trees_bugs_cdc, aes(x = zone_name, y = sum_bugs, col = tree_count)) +
   geom_point() +
   theme_classic()
