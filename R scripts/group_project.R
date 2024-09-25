@@ -5,6 +5,7 @@
 library(tidyverse)
 library(readxl)
 library(ggplot2)
+library(viridis)
 
 # Theme
 theme_ew <- function (base_size=16, font=NA) { 
@@ -50,7 +51,7 @@ mosquitoes_sub<- mosquitoes %>% group_by(zone_name, trap.type) %>%
 mosquitoes_sub<- na.omit(mosquitoes_sub)
 
 trees_mosquitoes_sub<- subset(trees_mosquitoes, select = c("zone_name", "OBJECTID_count",
-                                                           "x", "y"))
+                                                           "x", "y", "Zone.ID"))
 
 trees_bugs_merge<- merge(mosquitoes_sub, trees_mosquitoes_sub, by = "zone_name", 
                          all.mosquitoes_sub = FALSE, all.trees_mosquitoes_sub = FALSE)
@@ -60,6 +61,7 @@ trees_bugs_unique<- trees_bugs_merge %>%
 
 # More variable corrections
 trees_bugs_unique$tree_count<- trees_bugs_unique$OBJECTID_count
+trees_bugs_unique$zone_id<- as.factor(trees_bugs_unique$Zone.ID)
 
 # Visualize
 ggplot(mosquitoes, aes(x = zone_name, y = total.count)) +
@@ -73,6 +75,7 @@ ggplot(trees_bugs_unique, aes(x = tree_count, y = sum_bugs)) +
 ggplot(trees_bugs_unique, aes(x = tree_count, y = sum_bugs, col = tree_count)) +
   geom_point(size = 4) +
   scale_x_continuous("Total number of trees") +
+  scale_color_viridis() +
   scale_y_continuous("Total number of mosquitoes") +
   labs(col = "Total number of trees") +
   theme_ew()
@@ -81,18 +84,44 @@ ggplot(trees_bugs_unique, aes(x = tree_count, y = sum_bugs, col = tree_count)) +
 # Subset for each trap type
 trees_bugs_gravid<- subset(trees_bugs_unique, trap.type == "Gravid")
 
-ggplot(trees_bugs_gravid, aes(x = zone_name, y = sum_bugs, col = tree_count)) +
-  geom_point() +
-  theme_classic()
+ggplot(trees_bugs_gravid, aes(x = zone_id, y = sum_bugs, col = tree_count)) +
+  geom_point(size = 3) +
+  scale_x_discrete("Zones") +
+  scale_y_continuous("Total number of mosquitoes") +
+  labs(col = "Total number of trees") +
+  theme_ew() +
+  theme(axis.text.x = element_text(size = 12))
 
 trees_bugs_bg<- subset(trees_bugs_unique, trap.type == "BG")
 
-ggplot(trees_bugs_bg, aes(x = zone_name, y = sum_bugs, col = tree_count)) +
-  geom_point() +
-  theme_classic()
+ggplot(trees_bugs_bg, aes(x = zone_id, y = sum_bugs, col = tree_count)) +
+  geom_point(size = 3) +
+  scale_x_discrete("Zones") +
+  scale_y_continuous("Total number of mosquitoes") +
+  labs(col = "Total number of trees") +
+  theme_ew() +
+  theme(axis.text.x = element_text(size = 12))
 
 trees_bugs_cdc<- subset(trees_bugs_unique, trap.type == "CDC")
 
-ggplot(trees_bugs_cdc, aes(x = zone_name, y = sum_bugs, col = tree_count)) +
-  geom_point() +
-  theme_classic()
+ggplot(trees_bugs_cdc, aes(x = zone_id, y = sum_bugs, col = tree_count)) +
+  geom_point(size = 3) +
+  scale_x_discrete("Zones") +
+  scale_y_continuous("Total number of mosquitoes") +
+  labs(col = "Total number of trees") +
+  theme_ew() +
+  theme(axis.text.x = element_text(size = 12))
+
+# Show species caught by each trap
+
+traps_spp<- mosquitoes %>% group_by(trap.type) %>%
+  summarise(unique_spp = n_distinct(species))
+
+traps_spp<- subset(traps_spp, trap.type != "")
+
+ggplot(traps_spp, aes(x = trap.type, y = unique_spp)) +
+  geom_bar(stat = "identity", fill = "tomato3") +
+  xlab("Trap type") +
+  ylab("Number of species caught") +
+  theme_ew()
+
