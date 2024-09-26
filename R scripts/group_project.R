@@ -79,7 +79,14 @@ ggplot(trees_bugs_unique, aes(x = tree_count, y = sum_bugs, col = tree_count)) +
   scale_y_continuous("Total number of mosquitoes") +
   labs(col = "Total number of trees") +
   theme_ew()
- 
+
+# Summary statistics
+
+trees_bugs_na_rm<- trees_bugs_unique[complete.cases(trees_bugs_unique), ]
+
+trees_summary<- trees_bugs_na_rm %>% summarise(avg_trees = mean(tree_count))
+
+bugs_summary<- trees_bugs_na_rm %>% summarise(avg_bugs = mean(sum_bugs))
 
 # Subset for each trap type
 trees_bugs_gravid<- subset(trees_bugs_unique, trap.type == "Gravid")
@@ -124,4 +131,6 @@ ggplot(traps_spp, aes(x = trap.type, y = unique_spp)) +
   xlab("Trap type") +
   ylab("Number of species caught") +
   theme_ew()
+
+traps_summary<- traps_spp %>% summarise(avg_bugs = mean(unique_spp))
 
