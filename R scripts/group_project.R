@@ -6,6 +6,7 @@ library(tidyverse)
 library(readxl)
 library(ggplot2)
 library(viridis)
+library(car)
 
 # Theme
 theme_ew <- function (base_size=16, font=NA) { 
@@ -134,3 +135,19 @@ ggplot(traps_spp, aes(x = trap.type, y = unique_spp)) +
 
 traps_summary<- traps_spp %>% summarise(avg_bugs = mean(unique_spp))
 
+# Statistics
+
+# Mosquito abundance ~ tree density
+  # We want to see if there is a relationship between tree density within a 100 
+  # or 1000 m radius around CDC light traps and mosquito abundance caught by
+  # these traps.
+
+# Response: mosquito abundance, count
+# Predictor: tree density within a fixed radius around mosquito trap, count
+
+glm_abundance<- glm(sum_bugs ~ tree_count, data = trees_bugs_cdc, 
+                    family = poisson(link = "log"))
+
+summary(glm_abundance)
+
+Anova(glm_abundance, type = "III")
