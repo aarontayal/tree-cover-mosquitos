@@ -15,10 +15,10 @@ library(viridis)
 
 
 #load data
-trees<-read_excel("data/HRD trees and mosquitoes/100m_500m_tree_count_buffers_HRD.xlsx")
+trees<-read_excel("data/100m_500m_tree_count_buffers_HRD.xlsx")
 summary(trees)
 
-mosquitoes<- read_excel("data/HRD trees and mosquitoes/2021 FCPH surveillence_HRD.xlsx")
+mosquitoes<- read_excel("data/2021 FCPH surveillence_HRD.xlsx")
 summary(mosquitoes)
 
 # Variable corrections
