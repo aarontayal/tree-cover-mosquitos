@@ -12,13 +12,14 @@ library(tidyverse)
 library(readxl)
 library(ggplot2)
 library(viridis)
-
+library(AER)
+library(MASS)
 
 #load data
 trees<-read_excel("data/100m_500m_tree_count_buffers_HRD.xlsx")
 summary(trees)
 
-mosquitoes<- read_excel("data/2021 FCPH surveillence_HRD.xlsx")
+mosquitoes<- read_excel("C:/Users/erika/OneDrive - The Ohio State University/PhD/Courses/Ent Techniques fall 2024/Group Project/2021 FCPH surveillence_HRD.xlsx/2021 FCPH surveillence_HRD.xlsx")
 summary(mosquitoes)
 
 # Variable corrections
@@ -69,7 +70,7 @@ trees_cdc_rich<- merge(trees_cdc, spr_cdc, by = "zone_name",
 
 #calculate diversity
 
-cdc_sp_count_by_zone <- read_excel("data/HRD trees and mosquitoes/CDC species count by site.xlsx")
+cdc_sp_count_by_zone <- read_excel("data/CDC species count by site.xlsx")
 View(cdc_sp_count_by_zone) 
 
 tidy_mosq<- cdc_sp_count_by_zone %>%
@@ -121,6 +122,61 @@ ggplot(data=trees_cdc_rich_div, mapping=aes(x=number_trees_100m, y=N))+
   geom_line(data=new_data_trees_100m_N,
             aes(x=number_trees_100m, y=Predicted_N_poisson), linewidth=1)
 
+# Checking model assumptions
+  # 1. overdispersion
+dispersiontest(fit_trees_100m_N, trafo = 1)
+  # Highly overdispersed
+
+  # 2. Patterns in residuals
+par(mfrow = c(2, 2))
+plot(fit_trees_100m_N)
+  # Residuals are clustered in the middle and spread out widely in the upper end
+    # of the data.
+
+# Remove Jackson and Jefferson South because they are outliers
+trees_cdc_rich_div_rm_out<- trees_cdc_rich_div %>%
+  slice(-c(28, 30))
+
+# Re-fit model
+fit_trees_100m_N_2 <- glm (N~ number_trees_100m, data=trees_cdc_rich_div_rm_out, family=poisson(link = "log"))
+
+new_data_trees_100m_N_2 <- data.frame(number_trees_100m = seq(32, 405, 0.001))
+new_data_trees_100m_N_2$Predicted_N_poisson <- predict(fit_trees_100m_N_2,
+                                                       newdata = new_data_trees_100m_N_2, type="response")
+
+ggplot(data=trees_cdc_rich_div_rm_out, mapping=aes(x=number_trees_100m, y=N))+
+  geom_point()+theme_classic()+
+  geom_line(data=new_data_trees_100m_N,
+            aes(x=number_trees_100m, y=Predicted_N_poisson), linewidth=1)
+
+plot(fit_trees_100m_N_2)
+summary(fit_trees_100m_N_2)
+
+# There is still a significant effect of number of tree stems on mosquito abundance
+# after removing outliers.
+
+# Checking model assumptions
+  # 1. overdispersion
+dispersiontest(fit_trees_100m_N_2, trafo = 1)
+ # Slightly less overdispersed than fit 1, but still highly overdispersed.
+
+  # 2. patterns in residuals
+par(mfrow = c(2, 2))
+plot(fit_trees_100m_N_2)
+  # Residuals are clustered in the middle and spread out widely in the upper end
+    # of the data.
+
+# Model assumptions are not met.
+
+# Re-fit model with a negative binomial distribution
+fit_trees_100m_N_nb<- glm.nb(N ~ number_trees_100m, data = trees_cdc_rich_div_rm_out)
+summary(fit_trees_100m_N_nb)
+
+plot(fit_trees_100m_N_nb)
+
+# While this model accounts for overdispersion, the residual plots do not look
+  # much better than the poisson glm. Maybe we stick with poisson glm?
+
 ##### N mosquitoes ~ number trees 100m Figure----
 
 ggplot()+
@@ -142,12 +198,44 @@ ggplot()+
   scale_y_continuous(name= "Total Mosquitoes",limits = c(0,850), breaks = seq(0,850,200))+
   theme(plot.title = element_text(color="black", size = 24, hjust = 0.5))
 
+# Without outliers
+ggplot()+
+  geom_point(data=trees_cdc_rich_div_rm_out, size=3, mapping=aes(x=number_trees_100m, y=N, color= "100m"))+
+  geom_line(data=new_data_trees_100m_N_2, linewidth= 1, aes(x=number_trees_100m, y=Predicted_N_poisson, color= "100m"))+
+  theme(axis.line = element_line(colour = "black", linewidth = 1),
+        axis.ticks = element_line(colour = "black", linewidth = 1),
+        axis.text = element_text(colour = "black", size = 24),
+        axis.title = element_text(color = "black", size = 24, hjust = 0.5),
+        axis.title.y = element_text(margin = margin(t=0, r=20, l=0, b=0)),
+        axis.title.x = element_text(margin = margin(t=20, r=0, l=0, b=0)),
+        legend.position = "none",
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.background = element_blank()) + 
+  labs(x= "Tree Stem Count (within 100m)", y="Total Mosquitoes", title = "")+
+  scale_color_manual("", values=c("100m" = "green3"))+
+  scale_x_continuous(name= "Tree Stem Count (within 100m)",limits = c(0,410), breaks = seq(0,410,100))+
+  scale_y_continuous(name= "Total Mosquitoes",limits = c(0,850), breaks = seq(0,850,200))+
+  theme(plot.title = element_text(color="black", size = 24, hjust = 0.5))
+
+
 
 ##### N mosquitoes ~ number trees 500m----
 
 fit_trees_500m_N <- glm (N~ number_trees_500m, data=trees_cdc_rich_div, family=poisson(link = "log"))
 
 summary(fit_trees_500m_N)
+
+# Checking model assumptions
+# 1. overdispersion
+dispersiontest(fit_trees_500m_N, trafo = 1)
+# Highly overdispersed.
+
+# 2. patterns in residuals
+plot(fit_trees_500m_N)
+
+# Residuals look good overall, but they spread out a lot at the upper end of data.
+  # There is an outlier high on the x axis and low on the y axis.
 
 new_data_trees_500m_N <- data.frame(number_trees_500m = seq(2393,10057, 0.001))
 new_data_trees_500m_N$Predicted_N_poisson <- predict(fit_trees_500m_N,
@@ -158,6 +246,35 @@ ggplot(data=trees_cdc_rich_div, mapping=aes(x=number_trees_500m, y=N))+
   geom_line(data=new_data_trees_500m_N,
             aes(x=number_trees_500m, y=Predicted_N_poisson), linewidth=1)
 
+# Remove additional outlier
+trees_cdc_rich_div_rm_out_2<- trees_cdc_rich_div %>%
+  slice(-c(28, 30, 39))
+
+# Without outliers
+fit_trees_500m_N_2 <- glm (N~ number_trees_500m, data=trees_cdc_rich_div_rm_out_2, family=poisson(link = "log"))
+
+summary(fit_trees_500m_N_2)
+
+new_data_trees_500m_N_2 <- data.frame(number_trees_500m = seq(2393,10057, 0.001))
+new_data_trees_500m_N_2$Predicted_N_poisson <- predict(fit_trees_500m_N_2,
+                                                     newdata = new_data_trees_500m_N_2, type="response")
+
+# There is still a significant effect of number of trees on mosquito abundance.
+
+# Checking model assumptions
+# 1. overdispersion
+dispersiontest(fit_trees_500m_N_2, trafo = 1)
+# Slightly less overdispersed.
+
+# 2. patterns in residuals
+plot(fit_trees_500m_N_2)
+
+# Residuals better, though they are still spread out a bit at the upper end.
+
+ggplot(data=trees_cdc_rich_div_rm_out_2, mapping=aes(x=number_trees_500m, y=N))+
+  geom_point()+theme_classic()+
+  geom_line(data=new_data_trees_500m_N,
+            aes(x=number_trees_500m, y=Predicted_N_poisson), linewidth=1)
 
 ##### N mosquitoes ~ number trees 500m Figure----
 
@@ -180,12 +297,34 @@ ggplot()+
   scale_y_continuous(name= "Total Mosquitoes",limits = c(0,850), breaks = seq(0,850,200))+
   theme(plot.title = element_text(color="black", size = 24, hjust = 0.5))
 
+# Without outliers
+ggplot()+
+  geom_point(data=trees_cdc_rich_div_rm_out_2, size=3, mapping=aes(x=number_trees_500m, y=N, color= "500m"))+
+  geom_line(data=new_data_trees_500m_N_2, linewidth= 1, aes(x=number_trees_500m, y=Predicted_N_poisson, color= "500m"))+
+  theme(axis.line = element_line(colour = "black", linewidth = 1),
+        axis.ticks = element_line(colour = "black", linewidth = 1),
+        axis.text = element_text(colour = "black", size = 24),
+        axis.title = element_text(color = "black", size = 24, hjust = 0.5),
+        axis.title.y = element_text(margin = margin(t=0, r=20, l=0, b=0)),
+        axis.title.x = element_text(margin = margin(t=20, r=0, l=0, b=0)),
+        legend.position = "none",
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.background = element_blank()) + 
+  labs(x= "Tree Stem Count (within 500m)", y="Total Mosquitoes", title = "")+
+  scale_color_manual("", values=c("500m" = "brown"))+
+  scale_x_continuous(name= "Tree Stem Count (within 500m)",limits = c(0,10057), breaks = seq(0,10057,2500))+
+  scale_y_continuous(name= "Total Mosquitoes",limits = c(0,850), breaks = seq(0,850,200))+
+  theme(plot.title = element_text(color="black", size = 24, hjust = 0.5))
+
 
 ##### species.richness mosquitoes ~ number trees 100m----
 
-fit_trees_100m_species.richness <- glm (species.richness~ number_trees_100m, data=trees_cdc_rich_div, family=poisson(link = "log"))
+fit_trees_100m_species.richness <- glm(species.richness~ number_trees_100m, data=trees_cdc_rich_div, family=poisson(link = "log"))
 
 summary(fit_trees_100m_species.richness)
+
+# There is no significant effect of tree count on sp richness.
 
 new_data_trees_100m_species.richness <- data.frame(number_trees_100m = seq(32, 405, 0.001))
 new_data_trees_100m_species.richness$Predicted_species.richness_poisson <- predict(fit_trees_100m_species.richness,
@@ -224,6 +363,8 @@ fit_trees_500m_species.richness <- glm (species.richness~ number_trees_500m, dat
 
 summary(fit_trees_500m_species.richness)
 
+# There is still no significant effect with 500 m buffer.
+
 new_data_trees_500m_species.richness <- data.frame(number_trees_500m = seq(2393,10057, 0.001))
 new_data_trees_500m_species.richness$Predicted_species.richness_poisson <- predict(fit_trees_500m_species.richness,
                                                                                    newdata = new_data_trees_500m_species.richness, type="response")
@@ -261,6 +402,8 @@ fit_trees_100m_simpson.di <- glm (simpson.di~ number_trees_100m, data=trees_cdc_
 
 summary(fit_trees_100m_simpson.di)
 
+# There is no significant effect of tree count on sp diversity.
+
 new_data_trees_100m_simpson.di <- data.frame(number_trees_100m = seq(32, 405, 0.001))
 new_data_trees_100m_simpson.di$Predicted_simpson.di_poisson <- predict(fit_trees_100m_simpson.di,
                                                                        newdata = new_data_trees_100m_simpson.di, type="response")
@@ -297,6 +440,8 @@ ggplot()+
 fit_trees_500m_simpson.di <- glm (simpson.di~ number_trees_500m, data=trees_cdc_rich_div, family=poisson(link = "log"))
 
 summary(fit_trees_500m_simpson.di)
+
+# There is no significant effect of tree count on sp diversity with 500 m buffer.
 
 new_data_trees_500m_simpson.di <- data.frame(number_trees_500m = seq(2393,10057, 0.001))
 new_data_trees_500m_simpson.di$Predicted_simpson.di_poisson <- predict(fit_trees_500m_simpson.di,
