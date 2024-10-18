@@ -6,6 +6,7 @@ citation("tidyverse")
 citation("readxl")
 citation("ggplot2")
 citation("viridis")
+citation("AER")
 
 
 library(tidyverse)
@@ -14,6 +15,7 @@ library(ggplot2)
 library(viridis)
 library(AER)
 library(MASS)
+library(ggpubr)
 
 #load data
 trees<-read_excel("data/100m_500m_tree_count_buffers_HRD.xlsx")
@@ -137,6 +139,9 @@ plot(fit_trees_100m_N)
 trees_cdc_rich_div_rm_out<- trees_cdc_rich_div %>%
   slice(-c(28, 30))
 
+# Summary stats
+max(trees_cdc_rich_div_rm_out$N)
+
 # Re-fit model
 fit_trees_100m_N_2 <- glm (N~ number_trees_100m, data=trees_cdc_rich_div_rm_out, family=poisson(link = "log"))
 
@@ -199,7 +204,7 @@ ggplot()+
   theme(plot.title = element_text(color="black", size = 24, hjust = 0.5))
 
 # Without outliers
-ggplot()+
+abundance_100m<- ggplot()+
   geom_point(data=trees_cdc_rich_div_rm_out, size=3, mapping=aes(x=number_trees_100m, y=N, color= "100m"))+
   geom_line(data=new_data_trees_100m_N_2, linewidth= 1, aes(x=number_trees_100m, y=Predicted_N_poisson, color= "100m"))+
   theme(axis.line = element_line(colour = "black", linewidth = 1),
@@ -298,7 +303,7 @@ ggplot()+
   theme(plot.title = element_text(color="black", size = 24, hjust = 0.5))
 
 # Without outliers
-ggplot()+
+abundance_500m<- ggplot()+
   geom_point(data=trees_cdc_rich_div_rm_out_2, size=3, mapping=aes(x=number_trees_500m, y=N, color= "500m"))+
   geom_line(data=new_data_trees_500m_N_2, linewidth= 1, aes(x=number_trees_500m, y=Predicted_N_poisson, color= "500m"))+
   theme(axis.line = element_line(colour = "black", linewidth = 1),
@@ -317,7 +322,7 @@ ggplot()+
   scale_y_continuous(name= "Total Mosquitoes",limits = c(0,850), breaks = seq(0,850,200))+
   theme(plot.title = element_text(color="black", size = 24, hjust = 0.5))
 
-
+ggarrange(abundance_100m, abundance_500m, ncol = 2, nrow = 1)
 ##### species.richness mosquitoes ~ number trees 100m----
 
 fit_trees_100m_species.richness <- glm(species.richness~ number_trees_100m, data=trees_cdc_rich_div, family=poisson(link = "log"))
@@ -337,7 +342,7 @@ ggplot(data=trees_cdc_rich_div, mapping=aes(x=number_trees_100m, y=species.richn
 
 ##### species.richness mosquitoes ~ number trees 100m Figure----
 
-ggplot()+
+richness_100m<- ggplot()+
   geom_point(data=trees_cdc_rich_div, size=3, mapping=aes(x=number_trees_100m, y=species.richness, color= "100m"))+
   geom_line(data=new_data_trees_100m_species.richness, linewidth= 1, aes(x=number_trees_100m, y=Predicted_species.richness_poisson, color= "100m"))+
   theme(axis.line = element_line(colour = "black", linewidth = 1),
@@ -363,6 +368,9 @@ fit_trees_500m_species.richness <- glm (species.richness~ number_trees_500m, dat
 
 summary(fit_trees_500m_species.richness)
 
+# Summary stats
+max(trees_cdc_rich_div$species.richness)
+
 # There is still no significant effect with 500 m buffer.
 
 new_data_trees_500m_species.richness <- data.frame(number_trees_500m = seq(2393,10057, 0.001))
@@ -376,7 +384,7 @@ ggplot(data=trees_cdc_rich_div, mapping=aes(x=number_trees_500m, y=species.richn
 
 ##### species.richness mosquitoes ~ number trees 500m Figure----
 
-ggplot()+
+richness_500m<- ggplot()+
   geom_point(data=trees_cdc_rich_div, size=3, mapping=aes(x=number_trees_500m, y=species.richness, color= "500m"))+
   geom_line(data=new_data_trees_500m_species.richness, linewidth= 1, aes(x=number_trees_500m, y=Predicted_species.richness_poisson, color= "500m"))+
   theme(axis.line = element_line(colour = "black", linewidth = 1),
@@ -395,7 +403,7 @@ ggplot()+
   scale_y_continuous(name= "Mosquito Species Richness",limits = c(0,15), breaks = seq(0,15,5))+
   theme(plot.title = element_text(color="black", size = 24, hjust = 0.5))
 
-
+ggarrange(richness_100m, richness_500m, ncol = 2, nrow = 1)
 ##### simpson.di mosquitoes ~ number trees 100m----
 
 fit_trees_100m_simpson.di <- glm (simpson.di~ number_trees_100m, data=trees_cdc_rich_div, family=poisson(link = "log"))
@@ -415,7 +423,7 @@ ggplot(data=trees_cdc_rich_div, mapping=aes(x=number_trees_100m, y=simpson.di))+
 
 ##### simpson.di mosquitoes ~ number trees 100m Figure----
 
-ggplot()+
+simpson_100m<- ggplot()+
   geom_point(data=trees_cdc_rich_div, size=3, mapping=aes(x=number_trees_100m, y=simpson.di, color= "100m"))+
   geom_line(data=new_data_trees_100m_simpson.di, linewidth= 1, aes(x=number_trees_100m, y=Predicted_simpson.di_poisson, color= "100m"))+
   theme(axis.line = element_line(colour = "black", linewidth = 1),
@@ -454,7 +462,7 @@ ggplot(data=trees_cdc_rich_div, mapping=aes(x=number_trees_500m, y=simpson.di))+
 
 ##### simpson.di mosquitoes ~ number trees 500m Figure----
 
-ggplot()+
+simpson_500m<- ggplot()+
   geom_point(data=trees_cdc_rich_div, size=3, mapping=aes(x=number_trees_500m, y=simpson.di, color= "500m"))+
   geom_line(data=new_data_trees_500m_simpson.di, linewidth= 1, aes(x=number_trees_500m, y=Predicted_simpson.di_poisson, color= "500m"))+
   theme(axis.line = element_line(colour = "black", linewidth = 1),
@@ -473,6 +481,7 @@ ggplot()+
   scale_y_continuous(name= "Mosquito Species Diversity",limits = c(0,1), breaks = seq(0,1,0.25))+
   theme(plot.title = element_text(color="black", size = 24, hjust = 0.5))
 
+ggarrange(simpson_100m, simpson_500m, ncol = 2, nrow = 1)
 
 
 
