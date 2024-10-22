@@ -21,7 +21,9 @@ library(ggpubr)
 trees<-read_excel("data/100m_500m_tree_count_buffers_HRD.xlsx")
 summary(trees)
 
-mosquitoes<- read_excel("C:/Users/erika/OneDrive - The Ohio State University/PhD/Courses/Ent Techniques fall 2024/Group Project/2021 FCPH surveillence_HRD.xlsx/2021 FCPH surveillence_HRD.xlsx")
+# Erika's directory mosquitoes<- read_excel("C:/Users/erika/OneDrive - The Ohio State University/PhD/Courses/Ent Techniques fall 2024/Group Project/2021 FCPH surveillence_HRD.xlsx/2021 FCPH surveillence_HRD.xlsx")
+# Aaron directory:
+mosquitoes <- read_excel("C:/Users/Aaron/Desktop/2021 FCPH surveillence_HRD.xlsx")
 summary(mosquitoes)
 
 # Variable corrections
@@ -30,7 +32,7 @@ mosquitoes$y<- mosquitoes$latitude
 
 #subset data
 mosq_sp_sub<- mosquitoes %>% 
-  group_by(latitude, longitude, zone_name, trap_type,species) %>%
+  group_by(latitude, longitude, zone_name, trap_type, species) %>%
   summarise(sum_mosq_sp = sum(total_count))
 
 mosq_sp_cdc<- subset(mosq_sp_sub, trap_type =="CDC")
@@ -54,8 +56,12 @@ trees_mosquitoes_bg<- merge(mosq_sp_bg, trees_bg, by = "zone_name",
 trees_mosquitoes_gravid<- merge(mosq_sp_gravid, trees_gravid, by = "zone_name",
                            all.mosq_sp_gravid = FALSE, all.trees_gravid = FALSE)
 
+# How many zone names are there for the CDC traps? (aka what's the sample size)
+levels(as.factor(trees_mosquitoes_cdc$zone_name))
+# Sample size is 62 zones
+
 #calculate richness
-sp_abund<-table(trees_mosquitoes_cdc$species,trees_mosquitoes_cdc$zone_name)
+sp_abund<-table(trees_mosquitoes_cdc$species, trees_mosquitoes_cdc$zone_name)
 sp_abund
 sp_abund_df<-as.data.frame.matrix(sp_abund)
 glimpse(sp_abund_df)
@@ -75,7 +81,7 @@ trees_cdc_rich<- merge(trees_cdc, spr_cdc, by = "zone_name",
 cdc_sp_count_by_zone <- read_excel("data/CDC species count by site.xlsx")
 View(cdc_sp_count_by_zone) 
 
-tidy_mosq<- cdc_sp_count_by_zone %>%
+tidy_mosq <- cdc_sp_count_by_zone %>%
   pivot_longer(-zone_name,names_to="species",values_to="abundance") %>%
   arrange(zone_name)
 
@@ -102,9 +108,72 @@ trees_cdc_rich_div<- merge(trees_cdc_rich, trees_div_cdc, by = "zone_name",
 
 #removing Pickerington North and Pickerington South since there is no tree data (assuming that this is because Pickerington is not in Franklin County)
 
-trees_cdc_rich_div<- trees_cdc_rich_div[-c(40, 41), ]
+trees_cdc_rich_div<- trees_cdc_rich_div[(trees_cdc_rich_div$zone_name != "Pickerington North" & 
+                                           trees_cdc_rich_div$zone_name != "Pickerington South"), ]
+
 
 #finally, everything is in one place :)
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+######Summary statistics:
+# How many mosquitoes were caught in total?
+sum(trees_cdc_rich_div$N) # 12,129 mosquitoes
+# What was the average number of mosquitoes caught, and the standard deviation?
+mean(trees_cdc_rich_div$N) # Average of 202 mosquitoes caught at each trap
+sd(trees_cdc_rich_div$N) # Standard deviation of 168 mosquitoes
+# What does the distribution of mosquito abundances look like?
+hist(trees_cdc_rich_div$N, breaks=15) # Notice some traps caught way more
+# mosquitoes than others.
+
+# What was the most common species? The second-most common?
+
+
+# How many unique species were found at each trap, on average?
+mean(trees_cdc_rich_div$species.richness) # 11.23333 species
+sd(trees_cdc_rich_div$species.richness) # standard dev. of 2.110239 species
+
+# What was the average Simpson's diversity?
+mean(trees_cdc_rich_div$simpson.di)
+sd(trees_cdc_rich_div$simpson.di)
+
+# Does the Simpson's Diversity relate at all to the species richness?
+plot(trees_cdc_rich_div$species.richness, trees_cdc_rich_div$simpson.di)
+fit_Simpson_div_to_mosq_richness <- 
+  lm(simpson.di~species.richness, data=trees_cdc_rich_div) 
+summary(fit_Simpson_div_to_mosq_richness) # On first look, it seems Simpson's diversity
+# does NOT clearly vary with the species richness
+
+
+# I wonder whether traps that caught a high abundance of mosquitoes would also
+# have a lower Simpson's diversity (because many of 1 species might be caught)
+plot(trees_cdc_rich_div$N, trees_cdc_rich_div$simpson.di)
+fit_Simpson_div_to_mosq_abundance <- lm(simpson.di~N, data=trees_cdc_rich_div)
+summary(fit_Simpson_div_to_mosq_abundance) # Without doing too much analysis,
+# it seems like a higher abundance of mosquitoes was related to a lower Simpson's
+# diversity
+
+# On average, how many trees were counted in the 100m buffer?
+mean(trees_cdc_rich_div$number_trees_100m) # 204 trees
+sd(trees_cdc_rich_div$number_trees_100m) # 70 trees (about 34% of the mean)
+hist(trees_cdc_rich_div$number_trees_100m, breaks=20) # The distribution of this 
+# predictor seems to follow a "bell curve" shape - not that it matters!
+
+# On average, how many trees were counted in the 500m buffer?
+mean(trees_cdc_rich_div$number_trees_500m) # 5,220 trees
+sd(trees_cdc_rich_div$number_trees_500m) # Standard dev. of 1662 trees (about 32% of the mean)
+hist(trees_cdc_rich_div$number_trees_500m, breaks=20)
+
+# What is the correlation between the number of trees in 100m and the number 
+# in 500m?
+cor.test(trees_cdc_rich_div$number_trees_100m, trees_cdc_rich_div$number_trees_500m)
+cor.test(trees_cdc_rich_div$number_trees_100m, trees_cdc_rich_div$number_trees_500m, 
+         method="spearman")
+plot(trees_cdc_rich_div$number_trees_100m, trees_cdc_rich_div$number_trees_500m)
+# For each additional tree in the 100m, how many additional trees are in the 500m?
+buffer_relationship <- lm(number_trees_500m~number_trees_100m, data=trees_cdc_rich_div)
+summary(buffer_relationship)
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
 #####GLMS----
