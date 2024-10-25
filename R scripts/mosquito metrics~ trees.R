@@ -180,11 +180,11 @@ summary(buffer_relationship)
 
 ##### N mosquitoes ~ number trees 100m----
 
-fit_trees_100m_N <- glm (N~ number_trees_100m, data=trees_cdc_rich_div, family=poisson(link = "log"))
+fit_trees_100m_N <- glm(N~ number_trees_100m, data=trees_cdc_rich_div, family=poisson(link = "log"))
 
 summary(fit_trees_100m_N)
 
-new_data_trees_100m_N <- data.frame(number_trees_100m = seq(32, 405, 0.001))
+new_data_trees_100m_N <- data.frame(number_trees_100m = seq(32, 405, 0.1))
 new_data_trees_100m_N$Predicted_N_poisson <- predict(fit_trees_100m_N,
                                                      newdata = new_data_trees_100m_N, type="response")
 
@@ -552,6 +552,9 @@ simpson_500m<- ggplot()+
 
 ggarrange(simpson_100m, simpson_500m, ncol = 2, nrow = 1)
 
+
+# Looking at particular species:
+# Aedes triseriatus
 
 
 
