@@ -21,8 +21,8 @@ library(ggpubr)
 trees<-read_excel("data/100m_500m_tree_count_buffers_HRD.xlsx")
 summary(trees)
 
-# Erika's directory mosquitoes<- read_excel("C:/Users/erika/OneDrive - The Ohio State University/PhD/Courses/Ent Techniques fall 2024/Group Project/2021 FCPH surveillence_HRD.xlsx/2021 FCPH surveillence_HRD.xlsx")
-# Aaron directory:
+# Erika's directory: mosquitoes<- read_excel("C:/Users/erika/OneDrive - The Ohio State University/PhD/Courses/Ent Techniques fall 2024/Group Project/2021 FCPH surveillence_HRD.xlsx/2021 FCPH surveillence_HRD.xlsx")
+#Aaron directory:
 mosquitoes <- read_excel("C:/Users/Aaron/Desktop/2021 FCPH surveillence_HRD.xlsx")
 summary(mosquitoes)
 
