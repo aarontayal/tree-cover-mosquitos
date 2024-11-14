@@ -125,8 +125,11 @@ sd(trees_cdc_rich_div$N) # Standard deviation of 168 mosquitoes
 hist(trees_cdc_rich_div$N, breaks=15) # Notice some traps caught way more
 # mosquitoes than others.
 
-# What was the most common species? The second-most common?
-
+# What was the most common species? The second-most common? Third?
+species_counts <- tidy_mosq %>% group_by(species) %>% summarise(N=sum(abundance)) %>%
+  arrange(-N)
+# 1. Aedes vexans (4,329), 2. Aedes trivittatus (3,868), 3. Culex misc spp (1,207)
+ggplot(data=species_counts, aes(x=species, y=N)) + geom_point()
 
 # How many unique species were found at each trap, on average?
 mean(trees_cdc_rich_div$species.richness) # 11.23333 species
@@ -137,11 +140,20 @@ mean(trees_cdc_rich_div$simpson.di)
 sd(trees_cdc_rich_div$simpson.di)
 
 # Does the Simpson's Diversity relate at all to the species richness?
-plot(trees_cdc_rich_div$species.richness, trees_cdc_rich_div$simpson.di)
+ggplot(data=trees_cdc_rich_div, aes(x=species.richness, y=simpson.di, color=N))+
+  geom_point()
 fit_Simpson_div_to_mosq_richness <- 
   lm(simpson.di~species.richness, data=trees_cdc_rich_div) 
 summary(fit_Simpson_div_to_mosq_richness) # On first look, it seems Simpson's diversity
 # does NOT clearly vary with the species richness
+
+jefferson_south <- tidy_mosq %>% filter(zone_name=="Jefferson South")
+hist(x=jefferson_south$abundance, breaks=50) # it seems like traps that
+# had high spp richness and low simpson diversity had a single species 
+# in very high abundance
+
+Reynoldsburg_Northwest <- tidy_mosq %>% filter(zone_name=="Reynoldsburg Northwest")
+hist(x=Reynoldsburg_Northwest$abundance, breaks=50)
 
 
 # I wonder whether traps that caught a high abundance of mosquitoes would also
