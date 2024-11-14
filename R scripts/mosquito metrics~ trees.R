@@ -207,12 +207,18 @@ ggplot(data=trees_cdc_rich_div, mapping=aes(x=number_trees_100m, y=N))+
 
 # Checking model assumptions
   # 1. overdispersion
-dispersiontest(fit_trees_100m_N, trafo = 1)
-  # Highly overdispersed
+dispersiontest(fit_trees_100m_N, trafo = 1) # Assesses the null hypothesis that
+# Var[y] = E[y] = u against a model like Var[y] = u + a*(u^trafo). If trafo=1,
+# then Var[y] = (1+a)*u
+
+# Highly overdispersed (Variance of residual was about 136 times times the 
+# fitted)
+mean(trees_cdc_rich_div$N)
+var(trees_cdc_rich_div$N)
 
   # 2. Patterns in residuals
-par(mfrow = c(2, 2))
-plot(fit_trees_100m_N)
+par(mfrow = c(1,1))
+plot(fit_trees_100m_N, 5)
   # Residuals are clustered in the middle and spread out widely in the upper end
     # of the data.
 
