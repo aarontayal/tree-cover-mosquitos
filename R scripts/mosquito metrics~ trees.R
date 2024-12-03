@@ -152,9 +152,11 @@ hist(x=jefferson_south$abundance, breaks=50) # it seems like traps that
 # had high spp richness and low simpson diversity had a single species 
 # in very high abundance
 
+
 Reynoldsburg_Northwest <- tidy_mosq %>% filter(zone_name=="Reynoldsburg Northwest")
 hist(x=Reynoldsburg_Northwest$abundance, breaks=50)
 
+by_species <- tidy_mosq %>% group_by(species) %>% summarize(sum=sum(abundance))
 
 # I wonder whether traps that caught a high abundance of mosquitoes would also
 # have a lower Simpson's diversity (because many of 1 species might be caught)
